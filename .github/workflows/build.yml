@@ -25,7 +25,7 @@ jobs:
         run: |
           export THEOS=~/theos
           export PATH=$THEOS/bin:$PATH
-          make clean package FINALPACKAGE=1
+          make clean all FINALPACKAGE=1
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
