@@ -22,26 +22,27 @@ jobs:
       - name: Install Deps
         run: brew install ldid dpkg
 
-      - name: Compile
+      - name: Compile Tweak dylib
         run: |
           clang -arch arm64 -arch arm64e \
             -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.5.sdk \
             -target arm64-apple-ios15.0 \
             -fobjc-arc \
             -dynamiclib \
-            -framework UIKit -framework CoreFoundation -framework CoreGraphics \
+            -framework UIKit -framework CoreFoundation \
             -o LockPlayer.dylib Hooks/Tweak.m
           ldid -S LockPlayer.dylib
 
       - name: Package Deb
         run: |
           mkdir -p deb/var/jb/Library/MobileSubstrate/DynamicLibraries
-          mkdir -p deb/var/jb/Library/PreferenceLoader/Preferences
           cp LockPlayer.dylib deb/var/jb/Library/MobileSubstrate/DynamicLibraries/
           cp LockPlayer.plist deb/var/jb/Library/MobileSubstrate/DynamicLibraries/
-          cp LockPlayerMiniPrefs.plist deb/var/jb/Library/PreferenceLoader/Preferences/
           mkdir -p deb/DEBIAN
           cp control deb/DEBIAN/
+
+          find deb -type d -exec chmod 755 {} \;
+          find deb -type f -exec chmod 644 {} \;
           dpkg-deb -b deb LockPlayer.deb
 
       - name: Upload
