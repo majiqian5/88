@@ -30,7 +30,6 @@ jobs:
             -fobjc-arc \
             -dynamiclib \
             -framework UIKit -framework CoreFoundation -framework QuartzCore \
-            -lsubstrate \
             -o LockPlayer.dylib Hooks/Tweak.m
           ldid -S LockPlayer.dylib
 
