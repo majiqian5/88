@@ -3,6 +3,8 @@
 
 static CGFloat titleFontSize = 18.0f;
 static NSString *const PrefSuiteName = @"com.majiqian.lockplayermini";
+static IMP orig_MPLockScreenNowPlayingView_layoutSubviews = NULL;
+static IMP orig_MPControlCenterNowPlayingView_layoutSubviews = NULL;
 
 static void loadPrefs() {
     NSUserDefaults *ud = [[NSUserDefaults alloc] initWithSuiteName:PrefSuiteName];
@@ -23,44 +25,33 @@ static void recursiveApplyFont(UIView *view) {
     }
 }
 
-static void hooked_layoutSubviews(id self, SEL _cmd) {
-    //调用原方法
-    struct objc_super sup;
-    sup.receiver = self;
-    sup.super_class = class_getSuperclass(object_getClass(self));
-    objc_msgSendSuper(&sup, _cmd);
-
+static void hooked_LockScreen_layoutSubviews(id self, SEL _cmd) {
+    ((void (*)(id, SEL))orig_MPLockScreenNowPlayingView_layoutSubviews)(self, _cmd);
     loadPrefs();
     recursiveApplyFont(self);
 }
 
-static void swizzleClass(Class cls) {
+static void hooked_CC_layoutSubviews(id self, SEL _cmd) {
+    ((void (*)(id, SEL))orig_MPControlCenterNowPlayingView_layoutSubviews)(self, _cmd);
+    loadPrefs();
+    recursiveApplyFont(self);
+}
+
+static void swizzleClassSaveIMP(Class cls, IMP *outOrigIMP, IMP hookImp) {
     if(!cls) return;
     SEL selLayout = @selector(layoutSubviews);
-    IMP hookImp = (IMP)hooked_layoutSubviews;
     Method origMethod = class_getInstanceMethod(cls, selLayout);
     if(!origMethod) return;
-    //安全交换
-    class_addMethod(cls, selLayout, hookImp, method_getTypeEncoding(origMethod));
-    method_exchangeImplementations(class_getInstanceMethod(cls, selLayout), origMethod);
+    *outOrigIMP = method_setImplementation(origMethod, hookImp);
 }
 
 __attribute__((constructor))
 static void tweak_entry() {
     @autoreleasepool {
-        //优先锁屏播放器、其次控制中心父视图
         Class lockCls = objc_getClass("MPLockScreenNowPlayingView");
-        swizzleClass(lockCls);
+        swizzleClassSaveIMP(lockCls, &orig_MPLockScreenNowPlayingView_layoutSubviews, (IMP)hooked_LockScreen_layoutSubviews);
 
         Class ctrlCls = objc_getClass("MPControlCenterNowPlayingView");
-        swizzleClass(ctrlCls);
-
-        //兜底定时器，每1.3秒扫描所有窗口，防止hook失效
-        [NSTimer scheduledTimerWithTimeInterval:1.3 repeats:YES block:^(NSTimer *timer) {
-            loadPrefs();
-            for(UIWindow *win in [UIApplication sharedApplication].windows) {
-                recursiveApplyFont(win);
-            }
-        }];
+        swizzleClassSaveIMP(ctrlCls, &orig_MPControlCenterNowPlayingView_layoutSubviews, (IMP)hooked_CC_layoutSubviews);
     }
 }
