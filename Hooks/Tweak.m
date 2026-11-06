@@ -1,10 +1,9 @@
 #import <UIKit/UIKit.h>
 #import <objc/runtime.h>
-#import <substrate.h>
 
 static CGFloat titleFontSize = 18.0f;
 static NSString *const PrefSuiteName = @"com.majiqian.lockplayermini";
-static void (*orig_didMoveToWindow)(id self, SEL _cmd);
+static IMP orig_didMoveToWindow = NULL;
 
 static void loadPrefs() {
     NSUserDefaults *ud = [[NSUserDefaults alloc] initWithSuiteName:PrefSuiteName];
@@ -25,8 +24,8 @@ static void recursiveApplyFont(UIView *view) {
     }
 }
 
-void hooked_didMoveToWindow(id self, SEL _cmd) {
-    orig_didMoveToWindow(self, _cmd);
+static void hooked_didMoveToWindow(id self, SEL _cmd) {
+    ((void (*)(id, SEL))orig_didMoveToWindow)(self, _cmd);
     loadPrefs();
     recursiveApplyFont(self);
 }
@@ -36,10 +35,9 @@ static void tweak_entry() {
     Class targetCls = objc_getClass("MPNowPlayingInfoView");
     if (!targetCls) return;
 
-    MSHookMessageEx(
-        targetCls,
-        @selector(didMoveToWindow),
-        (IMP)hooked_didMoveToWindow,
-        (IMP *)&orig_didMoveToWindow
-    );
+    SEL sel = @selector(didMoveToWindow);
+    Method origMethod = class_getInstanceMethod(targetCls, sel);
+    if (!origMethod) return;
+
+    orig_didMoveToWindow = method_setImplementation(origMethod, (IMP)hooked_didMoveToWindow);
 }
