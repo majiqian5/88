@@ -30,7 +30,7 @@ jobs:
             -fobjc-arc \
             -dynamiclib \
             -framework UIKit -framework CoreFoundation \
-            -o LockPlayer Hooks/Tweak.mm
+            -o LockPlayer Hooks/Tweak.m
           ldid -S LockPlayer
 
       - name: Package Deb
