@@ -25,7 +25,7 @@ __attribute__((constructor)) static void init() {
         Class cls = NSClassFromString(@"MRUActivityNowPlayingView");
         if (cls) {
             Method m = class_getInstanceMethod(cls, @selector(layoutSubviews));
-            origLayout = (void *)method_getImplementation(m);
+            origLayout = (void (*)(id, SEL))method_getImplementation(m);
             method_setImplementation(m, (IMP)hookLayout);
         }
     }
