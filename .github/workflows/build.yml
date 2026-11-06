@@ -1,27 +1,3 @@
-name: Build Deb
-
-on:
-  push:
-    branches: [ main ]
-
-permissions:
-  contents: write
-
-jobs:
-  build:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup SDK
-        run: |
-          git clone --depth 1 --filter=blob:none --sparse https://github.com/theos/sdks.git /tmp/sdks
-          cd /tmp/sdks && git sparse-checkout set iPhoneOS16.5.sdk
-          sudo cp -R iPhoneOS16.5.sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/
-
-      - name: Install Deps
-        run: brew install ldid dpkg
-
       - name: Compile
         run: |
           clang -arch arm64 -arch arm64e \
@@ -29,23 +5,6 @@ jobs:
             -target arm64-apple-ios15.0 \
             -fobjc-arc \
             -dynamiclib \
-            -framework UIKit -framework CoreFoundation \
+            -framework UIKit -framework CoreFoundation -framework CoreGraphics \
             -o LockPlayer.dylib Hooks/Tweak.m
           ldid -S LockPlayer.dylib
-
-      - name: Package Deb
-        run: |
-          mkdir -p deb/var/jb/Library/MobileSubstrate/DynamicLibraries
-          mkdir -p deb/var/jb/Library/PreferenceLoader/Preferences
-          cp LockPlayer.dylib deb/var/jb/Library/MobileSubstrate/DynamicLibraries/
-          cp LockPlayer.plist deb/var/jb/Library/MobileSubstrate/DynamicLibraries/
-          cp LockPlayerMiniPrefs.plist deb/var/jb/Library/PreferenceLoader/Preferences/
-          mkdir -p deb/DEBIAN
-          cp control deb/DEBIAN/
-          dpkg-deb -b deb LockPlayer.deb
-
-      - name: Upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: deb
-          path: "*.deb"
