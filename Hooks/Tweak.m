@@ -3,43 +3,38 @@
 
 static CGFloat titleFontSize = 18.0;
 
-static void applyFontIfNeed(UILabel *label) {
-    // 只修改一次，打上标记避免重复修改
-    if(objc_getAssociatedObject(label, @"fontModified")) return;
-    
-    if(label.text.length > 5 && label.text.length < 60) {
-        label.font = [UIFont systemFontOfSize:titleFontSize weight:UIFontWeightSemibold];
-        objc_setAssociatedObject(label, @"fontModified", @(YES), OBJC_ASSOCIATION_RETAIN);
-    }
-}
-
-static void recurseCheck(UIView *view) {
-    for(UIView *sub in view.subviews) {
-        if([sub isKindOfClass:[UILabel class]]){
-            applyFontIfNeed((UILabel *)sub);
+static void applyFontOnce(UIView *view) {
+    if (!view) return;
+    for (UIView *sub in view.subviews) {
+        if ([sub isKindOfClass:[UILabel class]]) {
+            UILabel *lab = (UILabel *)sub;
+            if (!objc_getAssociatedObject(lab, @"fontFixed")) {
+                if(lab.text.length>5 && lab.text.length<60){
+                    lab.font = [UIFont systemFontOfSize:titleFontSize weight:UIFontWeightSemibold];
+                }
+                objc_setAssociatedObject(lab, @"fontFixed", @YES, OBJC_ASSOCIATION_RETAIN);
+            }
         }
-        recurseCheck(sub);
+        applyFontOnce(sub);
     }
 }
 
-static void (*origDidAddSubview)(id self, SEL _cmd, UIView *subview);
-static void hookDidAddSubview(id self, SEL _cmd, UIView *subview) {
-    origDidAddSubview(self, _cmd, subview);
-    recurseCheck(subview);
-}
-
-static void hookClass(NSString *clsName) {
-    Class cls = NSClassFromString(clsName);
-    if(!cls) return;
-    Method m = class_getInstanceMethod(cls, @selector(didAddSubview:));
-    if(!m) return;
-    origDidAddSubview = (void(*)(id,SEL,UIView*))method_getImplementation(m);
-    method_setImplementation(m, (IMP)hookDidAddSubview);
+static void scanNowPlaying(void) {
+    UIWindow *win = nil;
+    for(UIWindow *w in [UIApplication sharedApplication].windows){
+        if([w isKeyWindow]){
+            win = w;
+            break;
+        }
+    }
+    if(!win) return;
+    applyFontOnce(win);
 }
 
 __attribute__((constructor)) static void tweak_main(){
     @autoreleasepool {
-        hookClass(@"MRUActivityNowPlayingView");
-        hookClass(@"MRUNowPlayingView");
+        [NSTimer scheduledTimerWithTimeInterval:1.2 repeats:YES block:^(NSTimer *timer) {
+            scanNowPlaying();
+        }];
     }
 }
