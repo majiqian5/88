@@ -36,8 +36,10 @@ jobs:
       - name: Package Deb
         run: |
           mkdir -p deb/var/jb/Library/MobileSubstrate/DynamicLibraries
+          mkdir -p deb/var/jb/Library/PreferenceLoader/Preferences
           cp LockPlayer.dylib deb/var/jb/Library/MobileSubstrate/DynamicLibraries/
           cp LockPlayer.plist deb/var/jb/Library/MobileSubstrate/DynamicLibraries/
+          cp LockPlayerMiniPrefs.plist deb/var/jb/Library/PreferenceLoader/Preferences/
           mkdir -p deb/DEBIAN
           cp control deb/DEBIAN/
           dpkg-deb -b deb LockPlayer.deb
