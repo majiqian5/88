@@ -11,6 +11,11 @@
     return self;
 }
 
+- (instancetype)initWithCoder:(NSCoder *)coder {
+    self = [super initWithCoder:coder];
+    return self;
+}
+
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.title = @"LockPlayerMini";
@@ -37,7 +42,7 @@
 }
 
 - (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
-    return @"修改后重新打开锁屏播放器生效";
+    return @"修改后切歌重新调出播放器生效";
 }
 
 - (void)sliderChanged:(UISlider *)sender {
