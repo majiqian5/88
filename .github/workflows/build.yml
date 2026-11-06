@@ -49,13 +49,16 @@ jobs:
         run: |
           mkdir -p deb/var/jb/Library/MobileSubstrate/DynamicLibraries
           mkdir -p deb/var/jb/Library/PreferenceBundles
+          mkdir -p deb/var/jb/Library/PreferenceLoader/Preferences
           cp LockPlayer.dylib deb/var/jb/Library/MobileSubstrate/DynamicLibraries/
           cp LockPlayer.plist deb/var/jb/Library/MobileSubstrate/DynamicLibraries/
           cp -r LockPlayerMiniPref.bundle deb/var/jb/Library/PreferenceBundles/
+          cp LockPlayerMini.plist deb/var/jb/Library/PreferenceLoader/Preferences/
           mkdir -p deb/DEBIAN
           cp control deb/DEBIAN/
           find deb -type d -exec chmod 755 {} \;
-          find deb -type f -exec chmod 644 {} \;
+          find deb -name "*.dylib" -exec chmod 755 {} \;
+          find deb ! -name "*.dylib" -type f -exec chmod 644 {} \;
           dpkg-deb -b deb LockPlayer.deb
 
       - name: Upload
