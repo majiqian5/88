@@ -1,0 +1,9 @@
+Package: com.majiqian.lockplayermini
+Name: LockPlayerMini
+Version: 0.0.1
+Architecture: iphoneos-arm64
+Description: 锁屏播放器大小字体自定义
+Maintainer: majiqian
+Author: majiqian
+Section: Tweaks
+Depends: mobilesubstrate, preferenceloader
