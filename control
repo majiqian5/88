@@ -4,4 +4,4 @@ Version: 1.0
 Architecture: arm64 arm64e
 Maintainer: me
 Description: Lock screen player font tweak
-Depends: mobilesubstrate
+Depends: ellectkit
