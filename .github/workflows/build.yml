@@ -30,13 +30,13 @@ jobs:
             -fobjc-arc \
             -dynamiclib \
             -framework UIKit -framework CoreFoundation \
-            -o LockPlayer Hooks/Tweak.m
-          ldid -S LockPlayer
+            -o LockPlayer.dylib Hooks/Tweak.m
+          ldid -S LockPlayer.dylib
 
       - name: Package Deb
         run: |
           mkdir -p deb/var/jb/Library/MobileSubstrate/DynamicLibraries
-          cp LockPlayer deb/var/jb/Library/MobileSubstrate/DynamicLibraries/
+          cp LockPlayer.dylib deb/var/jb/Library/MobileSubstrate/DynamicLibraries/
           cp LockPlayer.plist deb/var/jb/Library/MobileSubstrate/DynamicLibraries/
           mkdir -p deb/DEBIAN
           cp control deb/DEBIAN/
