@@ -33,26 +33,12 @@ jobs:
             -o LockPlayer.dylib Hooks/Tweak.m
           ldid -S LockPlayer.dylib
 
-      - name: Compile Pref Bundle
-        run: |
-          clang -arch arm64 -arch arm64e \
-            -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.5.sdk \
-            -target arm64-apple-ios15.0 \
-            -fobjc-arc \
-            -dynamiclib \
-            -framework UIKit \
-            -o LockPlayerMiniPref.bundle/LockPlayerMiniPref \
-            Prefs/RootVC.m
-          ldid -S LockPlayerMiniPref.bundle/LockPlayerMiniPref
-
       - name: Package Deb
         run: |
           mkdir -p deb/var/jb/Library/MobileSubstrate/DynamicLibraries
-          mkdir -p deb/var/jb/Library/PreferenceBundles
           mkdir -p deb/var/jb/Library/PreferenceLoader/Preferences
           cp LockPlayer.dylib deb/var/jb/Library/MobileSubstrate/DynamicLibraries/
           cp LockPlayer.plist deb/var/jb/Library/MobileSubstrate/DynamicLibraries/
-          cp -r LockPlayerMiniPref.bundle deb/var/jb/Library/PreferenceBundles/
           cp LockPlayerMini.plist deb/var/jb/Library/PreferenceLoader/Preferences/
           mkdir -p deb/DEBIAN
           cp control deb/DEBIAN/
