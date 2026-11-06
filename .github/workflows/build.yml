@@ -1,10 +1,12 @@
 name: Build LockPlayerMini
+
 on:
   push:
     branches: [ main ]
+
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -13,17 +15,18 @@ jobs:
           git clone --depth 1 --recursive https://github.com/theos/theos.git ~/theos
           echo "THEOS=$HOME/theos" >> $GITHUB_ENV
           export THEOS=$HOME/theos
-          # 自动下载iOS SDK
-          $THEOS/bin/install-sdk 16.5
+          export PATH=$THEOS/bin:$PATH
 
-      - name: Install perl依赖
-        run: sudo apt install -y libio-compress-lzma-perl build-essential fakeroot rsync curl perl git
+      - name: Install deps
+        run: brew install ldid dpkg perl
 
-      - name: Compile deb
+      - name: Build
         run: |
-          make clean package THEOS_PACKAGE_SCHEME=rootless SDKVERSION=16.5
+          export THEOS=$HOME/theos
+          export PATH=$THEOS/bin:$PATH
+          make clean package THEOS_PACKAGE_SCHEME=rootless
 
-      - name: Upload Artifact
+      - name: Upload deb
         uses: actions/upload-artifact@v4
         with:
           name: LockPlayerMini-deb
