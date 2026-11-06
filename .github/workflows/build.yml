@@ -1,52 +1,21 @@
-name: Build Deb
-
+name: Build LockPlayerMini
 on:
   push:
     branches: [ main ]
-
-permissions:
-  contents: write
-
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup SDK
+      - name: Setup Theos
         run: |
-          git clone --depth 1 --filter=blob:none --sparse https://github.com/theos/sdks.git /tmp/sdks
-          cd /tmp/sdks && git sparse-checkout set iPhoneOS16.5.sdk
-          sudo cp -R iPhoneOS16.5.sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/
-
-      - name: Install Deps
-        run: brew install ldid dpkg
-
-      - name: Compile Tweak dylib
+          git clone --depth 1 https://github.com/theos/theos.git ~/theos
+          echo "THEOS=$HOME/theos" >> $GITHUB_ENV
+      - name: Compile deb
         run: |
-          clang -arch arm64 -arch arm64e \
-            -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.5.sdk \
-            -target arm64-apple-ios15.0 \
-            -fobjc-arc \
-            -dynamiclib \
-            -framework UIKit -framework CoreFoundation \
-            -o LockPlayer.dylib Hooks/Tweak.m
-          ldid -S LockPlayer.dylib
-
-      - name: Package Deb
-        run: |
-          mkdir -p deb/var/jb/Library/MobileSubstrate/DynamicLibraries
-          cp LockPlayer.dylib deb/var/jb/Library/MobileSubstrate/DynamicLibraries/
-          cp LockPlayer.plist deb/var/jb/Library/MobileSubstrate/DynamicLibraries/
-          mkdir -p deb/DEBIAN
-          cp control deb/DEBIAN/
-
-          find deb -type d -exec chmod 755 {} \;
-          find deb -type f -exec chmod 644 {} \;
-          dpkg-deb -b deb LockPlayer.deb
-
-      - name: Upload
+          make clean package THEOS_PACKAGE_SCHEME=rootless
+      - name: Download Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: deb
-          path: "*.deb"
+          name: LockPlayerMini
+          path: packages/*.deb
