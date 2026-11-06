@@ -1,96 +1,49 @@
-name: Build CCWeatherEnhanced
+name: Build Deb
 
 on:
   push:
-    branches: [ main, master ]
-  workflow_dispatch:
+    branches: [ main ]
+
+permissions:
+  contents: write
 
 jobs:
   build:
     runs-on: macos-latest
-    
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    
-    - name: 解压源码（如果有zip）
-      run: |
-        if ls *.zip 1> /dev/null 2>&1; then
-          for z in *.zip; do
-            unzip -o "$z" -d /tmp/src
-          done
-          if [ -f "/tmp/src/CCWeatherEnhanced/Makefile" ]; then
-            cp -r /tmp/src/CCWeatherEnhanced/* .
-            cp -r /tmp/src/CCWeatherEnhanced/.* . 2>/dev/null || true
-          fi
-        fi
-        ls -la
-    
-    - name: 安装依赖
-      run: |
-        brew install ldid dpkg
-    
-    - name: 安装 Theos
-      run: |
-        rm -rf ~/theos
-        git clone --recursive https://github.com/theos/theos.git ~/theos
-    
-    - name: 安装 iOS SDK
-      run: |
-        rm -rf ~/theos/sdks
-        git clone https://github.com/theos/sdks.git ~/theos/sdks
-    
-    - name: 编译
-      run: |
-        export THEOS=~/theos
-        export PATH="/usr/local/bin:/opt/homebrew/bin:$PATH"
-        make clean package FINALPACKAGE=1
-      env:
-        THEOS: /Users/runner/theos
-    
-    - name: 手动注入 Info.plist
-      run: |
-        DEB=$(find . -name "*.deb" | head -1)
-        echo "DEB: $DEB"
-        rm -rf /tmp/deb_repack
-        mkdir -p /tmp/deb_repack
-        dpkg-deb -x "$DEB" /tmp/deb_repack
-        dpkg-deb -e "$DEB" /tmp/deb_repack/DEBIAN
-        
-        echo "=== 注入 Module Info.plist ==="
-        cp CCWeatherModule/Info.plist /tmp/deb_repack/var/jb/Library/ControlCenter/Bundles/CCWeatherModule.bundle/Info.plist
-        
-        echo "=== 注入 Prefs Info.plist ==="
-        cp CCWeatherPrefs/Info.plist /tmp/deb_repack/var/jb/Library/PreferenceBundles/CCWeatherPrefs.bundle/Info.plist
-        
-        echo "=== 验证 ==="
-        ls -la /tmp/deb_repack/var/jb/Library/ControlCenter/Bundles/CCWeatherModule.bundle/Info.plist
-        ls -la /tmp/deb_repack/var/jb/Library/PreferenceBundles/CCWeatherPrefs.bundle/Info.plist
-        
-        rm -f "$DEB"
-        dpkg-deb --root-owner-group -b /tmp/deb_repack "$DEB"
-        echo "=== 重新打包完成 ==="
-        ls -la "$DEB"
-    
-    - name: 验证 deb 内容
-      run: |
-        DEB=$(find . -name "*.deb" | head -1)
-        echo "DEB: $DEB"
-        mkdir -p /tmp/verify
-        dpkg-deb -x "$DEB" /tmp/verify
-        echo "=== 文件数量 ==="
-        find /tmp/verify -type f | wc -l
-        echo "=== Prefs 类型 ==="
-        file /tmp/verify/var/jb/Library/PreferenceBundles/CCWeatherPrefs.bundle/CCWeatherPrefs
-        echo "=== Module 类型 ==="
-        file /tmp/verify/var/jb/Library/ControlCenter/Bundles/CCWeatherModule.bundle/CCWeatherModule
-        echo "=== Info.plist ==="
-        ls -la /tmp/verify/var/jb/Library/ControlCenter/Bundles/CCWeatherModule.bundle/Info.plist
-        ls -la /tmp/verify/var/jb/Library/PreferenceBundles/CCWeatherPrefs.bundle/Info.plist
-    
-    - name: 上传 DEB
-      uses: actions/upload-artifact@v4
-      with:
-        name: CCWeatherEnhanced-deb
-        path: "**/*.deb"
-        if-no-files-found: error
+      - uses: actions/checkout@v4
+
+      - name: Setup SDK
+        run: |
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/theos/sdks.git /tmp/sdks
+          cd /tmp/sdks && git sparse-checkout set iPhoneOS16.5.sdk
+          sudo cp -R iPhoneOS16.5.sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/
+
+      - name: Install Deps
+        run: brew install ldid dpkg
+
+      - name: Compile
+        run: |
+          clang -arch arm64 -arch arm64e \
+            -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.5.sdk \
+            -target arm64-apple-ios15.0 \
+            -fobjc-arc \
+            -dynamiclib \
+            -framework UIKit -framework CoreFoundation \
+            -o LockPlayer Hooks/Tweak.xm
+          ldid -S LockPlayer
+
+      - name: Package Deb
+        run: |
+          mkdir -p deb/var/jb/Library/MobileSubstrate/DynamicLibraries
+          cp LockPlayer deb/var/jb/Library/MobileSubstrate/DynamicLibraries/
+          cp LockPlayer.plist deb/var/jb/Library/MobileSubstrate/DynamicLibraries/
+          mkdir -p deb/DEBIAN
+          cp control deb/DEBIAN/
+          dpkg-deb -b deb LockPlayer.deb
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: deb
+          path: *.deb
