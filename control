@@ -1,9 +1,8 @@
 Package: com.majiqian.lockplayermini
 Name: LockPlayerMini
 Version: 0.0.1
-Architecture: iphoneos-arm64
-Description: 锁屏播放器大小字体自定义
+Architecture: arm64
+Description: Lock Screen Player Font Tweak
 Maintainer: majiqian
 Author: majiqian
 Section: Tweaks
-Depends: mobilesubstrate, preferenceloader
