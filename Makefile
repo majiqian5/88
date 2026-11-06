@@ -15,11 +15,5 @@ LockPlayerMiniPref_FRAMEWORKS = UIKit
 LockPlayerMiniPref_CFLAGS = -fobjc-arc
 LockPlayerMiniPref_INSTALL_PATH = /var/jb/Library/PreferenceBundles
 
-BUNDLE_NAME += CCLockPlayerSwitch
-CCLockPlayerSwitch_FILES = CC/CCLockPlayerSwitch.m
-CCLockPlayerSwitch_FRAMEWORKS = UIKit ControlCenterUI
-CCLockPlayerSwitch_CFLAGS = -fobjc-arc
-CCLockPlayerSwitch_INSTALL_PATH = /var/jb/Library/ControlCenter/CCModules
-
 include $(THEOS_MAKE_PATH)/tweak.mk
 include $(THEOS_MAKE_PATH)/bundle.mk
