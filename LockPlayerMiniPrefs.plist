@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>items</key>
+    <array>
+        <dict>
+            <key>cell</key>
+            <string>PSGroupCell</string>
+            <key>label</key>
+            <string>彩虹渐变标题</string>
+        </dict>
+        <dict>
+            <key>cell</key>
+            <string>PSSwitchCell</string>
+            <key>defaults</key>
+            <string>com.majiqian.lockplayermini</string>
+            <key>key</key>
+            <string>rainbowEnabled</string>
+            <key>default</key>
+            <true/>
+            <key>label</key>
+            <string>开启彩虹渐变</string>
+        </dict>
+        <dict>
+            <key>cell</key>
+            <string>PSGroupCell</string>
+            <key>label</key>
+            <string>字体大小</string>
+        </dict>
+        <dict>
+            <key>cell</key>
+            <string>PSSliderCell</string>
+            <key>defaults</key>
+            <string>com.majiqian.lockplayermini</string>
+            <key>key</key>
+            <string>fontSize</string>
+            <key>minimum</key>
+            <real>12.0</real>
+            <key>maximum</key>
+            <real>30.0</real>
+            <key>default</key>
+            <real>17.0</real>
+        </dict>
+        <dict>
+            <key>cell</key>
+            <string>PSGroupCell</string>
+            <key>label</key>
+            <string>修改后注销SpringBoard生效</string>
+        </dict>
+    </array>
+</dict>
+</plist>
